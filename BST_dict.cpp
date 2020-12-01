@@ -1,143 +1,137 @@
-// C++ Headers
-#include <iostream>
-#include <iomanip>
-#include <new>
-#include <string>
-#include <fstream>
-#include <queue>
+#include <stdio.h>
+#include <stdlib.h>
 
-// C Headers
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
-#include <cctype>
+struct dict {
+  struct dict *left,*right;
+  char word[10],meaning[20];
+}*Root=NULL;
 
+typedef struct dict dictionary;
+int check(char[],char[]);
+void insert(dictionary *);
+void Search();
+void view(dictionary *);
 
-using namespace std;
-
-// Defination for Binary Search Tree Node
-struct node {
-    char word[20];
-    char meaning[40];
-    node *left, *right;
-    node() { }
-    node(char *word, char *meaning) {
-        strcpy(this->word, word);
-        strcpy(this->meaning, meaning);
-        this->left = this->right = NULL;
-    }
- };
-
-
- // Insertion in Binary Search Tree
-node* insert(node *root, char *word, char *mean)
-{
-    if(root == NULL) {
-        return new node(word, mean);
-    } else {
-        if(strcmp(root->word, word) <= 0) {
-            root->left = insert(root->left , word, mean);
-        } else {
-            root->right = insert(root->right, word, mean);
+int check(char a[],char b[]){
+     int i,j,c;
+     for(i=0,j=0 ; a[i]!='\0'&&b[j]!='\0' ; i++,j++){
+       if(a[i]>b[j]){
+         c=1;
+         break;
+       }
+        else if(b[j]>a[i]){
+          c=-1;
+          break;
         }
-    }
+      else
+         c=0;
+     }
+     if(c==1)
+       return 1;
+      else if(c==-1)
+        return -1;
+      else
+        return 0;
 }
 
-
-// Pre Order Traversal of Binary Search Tree
-void preorder(node *root) {
-    if(root) {
-        cout << root->word << " => " << root->meaning << endl;
-        preorder(root->left);
-        preorder(root->right);
+void Search(){
+  int flag=0;
+  dictionary *ptr;
+  ptr=Root;
+  char w[10];
+  printf("\nEnter word");
+  scanf("%s",w);
+  while(ptr!=NULL && flag==0){
+    if(check(w,ptr->word)>0)
+       ptr=ptr->right;
+    else if(check(w,ptr->word)<0)
+          ptr=ptr->left;
+    else if(check(w,ptr->word)==0){
+       flag=1;
+       printf("\n%s",ptr->meaning);
     }
+
+    }
+    if(flag==0)
+      printf("\nWord not found");
 }
 
-// Inrder Traversal of Binary Search Tree
-void inorder(node *root) {
-    if(root) {
-        inorder(root->left);
-        cout << root->word << " => " << root->meaning << endl;
-        inorder(root->right);
-    }
+void insert(dictionary *temp){
+  int flag=0;
+  dictionary *ptr,*par;
+  ptr=Root;
+
+  if(Root==NULL)
+     Root=temp;
+  else{
+     while(ptr!=NULL ){
+       if(check(temp->word,ptr->word)>0){
+         par=ptr;
+         ptr=ptr->right;
+       }
+
+       else if(check(temp->word,ptr->word)<0)
+     {
+       par=ptr;
+       ptr=ptr->left;
+     }
+       else if(check(temp->word,ptr->word)==0){
+          flag=1;
+            printf("\nWord exists!!");
+          break;
+       }
+
+   }
+       if(flag==0 && ptr==NULL){
+
+         if(check(par->word,temp->word)==1)
+            par->left=temp;
+         else if(check(par->word,temp->word)==-1)
+            par->right=temp;
+       }
+
+     }
+
 }
 
-// Post Order Traversal of Binary Search Tree
-void postorder(node *root) {
-    if(root) {
-        postorder(root->left);
-        postorder(root->right);
-        cout << root->word << " => " << root->meaning << endl;
+void view(dictionary *ptr){
+  if(Root==NULL)
+    printf("\nEmpty dictionary\n");
 
-    }
+  else if(ptr !=NULL){
+   view(ptr->left);
+
+   printf("\nWord:%s\n",ptr->word);
+   printf("\nMeaning:%s\n",ptr->meaning);
+
+   view(ptr->right);
+  }
+
 }
 
-// Query in Binary Search Tree
-void look(node *root, char *word) {
-    if(root == NULL) {
-        cout << "Not found !!\n";
-        return;
+int main(int argc, char const *argv[]) {
+  int ch;
+  dictionary *temp;
+  while(ch!=4){
+    printf("\n1.Search\n2.Insert\n3.View\n4.Exit\nYour choice please..");
+    scanf("%d",&ch);
+    switch (ch) {
+      case 1: Search();break;
+      case 2:
+      temp=(dictionary*)malloc(sizeof(dictionary));
+      temp->left=NULL;
+      temp->right=NULL;
+      printf("\nInsert word:\n");
+      scanf("%s",temp->word);
+      printf("\nInsert meaning:\n");
+      scanf("%s",temp->meaning);
+       insert(temp);
+      break;
+      case 3:
+      view(Root);
+      break;
+      case 4:exit(0);
     }
-    if(strcmp(root->word, word) == 0) {
-        cout << "Meaning is -> " << root->meaning << '\n';
-    } else if(strcmp(root->word, word) < 0) {
-        look(root->left, word);
-    } else {
-        look(root->right, word);
-    }
-}
-
-// level order traversal for Binary Search Tree
-void level(node *root) {
-    queue< node* > q;
-    q.push(root);
-    while(!q.empty()) {
-        cout << q.front()->word << " => " << q.front()->meaning << '\n';
-        if(q.front()->left)
-            q.push(q.front()->left);
-        if(q.front()->right)
-            q.push(q.front()->right);
-        q.pop();
-    }
-}
-
-int main()
-{
-    node *root = NULL;
-    ifstream fin("data.txt", ios::in);
-    char a[21], b[41];
-    while(fin >> a) {
-        fin.get(b, 40, '\n');
-        root = insert(root, a, b);
-    }
-
-    /// traversals
-    // preorder(root); cout << endl;
-    // level(root); cout << endl;
-    int ch = 1;
-    do {
-        printf("1. Enter Word for Query\n");
-        printf("2. Enter new Word and Meaning\n");
-        printf("3. Exit\n\t");
-        cin >> ch;
-        switch(ch) {
-            case 1: char s[21];
-                    // tolower(s);
-                    cin >> s;
-                    look(root, s);
-                    break;
-            case 2: cin >> a;
-                    cin >> b;
-                    root = insert(root, a, b);
-                    cout << "Dictionary Successfully Updated !!\n";
-                    break;
-            case 3: exit(EXIT_SUCCESS);
-                    break;
-            default: cout << "Wrong Choice !!";
-                    break;
-
-        }
-    } while(ch >= 1 && ch <= 2);
-    return 0;
+  }
+  return 0;
 }
